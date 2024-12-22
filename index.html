@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Obtener y Descargar Video</title>
+    <style>
+        /* General Styles */
+        body {
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 30px;
+            background-color: #1e1e1e;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: #f5a623;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            background-color: #333;
+            border: 1px solid #444;
+            color: #fff;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #6200ea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #3700b3;
+        }
+
+        .output {
+            display: none;
+            background-color: #333;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+
+        .output p {
+            font-size: 16px;
+        }
+
+        .download-link {
+            color: #fff;
+            background-color: #6200ea;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .download-link:hover {
+            background-color: #3700b3;
+        }
+
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #6200ea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .error {
+            color: #ff0000;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .thumbnail {
+            width: 100%;
+            height: auto;
+            margin-top: 10px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Ingrese URL del video</h1>
+        <form id="videoForm">
+            <input type="text" id="videoUrl" placeholder="Ingresa la URL del video de TikTok" required>
+            <button type="submit">Obtener Video</button>
+        </form>
+
+        <div id="loading" class="loader" style="display: none;"></div>
+
+        <div id="output" class="output">
+            <p><strong>Hacer clic para descargar el video:</strong></p>
+            <img id="videoThumbnail" class="thumbnail" src="" alt="Miniatura del video" />
+            <a id="downloadLink" class="download-link" href="" download>Descargar Video</a>
+        </div>
+
+        <div id="error" class="error" style="display: none;"></div>
+    </div>
+
+    <script>
+        document.getElementById("videoForm").addEventListener("submit", async (event) => {
+            event.preventDefault();
+
+            const videoUrl = document.getElementById("videoUrl").value;
+            const errorElement = document.getElementById("error");
+            const outputElement = document.getElementById("output");
+            const downloadLinkElement = document.getElementById("downloadLink");
+            const videoThumbnailElement = document.getElementById("videoThumbnail");
+            const loadingElement = document.getElementById("loading");
+
+            // Reset previous states
+            errorElement.style.display = "none";
+            outputElement.style.display = "none";
+            loadingElement.style.display = "block";
+
+            try {
+                // const response = await fetch("http://192.168.1.7:3000/get-video-id", { //ip de tu maquina
+
+                const response = await fetch("http://localhost:3000/get-video-id", {
+
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ url: videoUrl }),
+                });
+
+                if (!response.ok) {
+                    throw new Error('No se pudo obtener la URL del video');
+                }
+
+                const data = await response.json();
+
+                // Mostrar la miniatura del video
+                videoThumbnailElement.src = data.thumbnailUrl;
+                // Usar el videoId para construir el enlace de descarga
+                downloadLinkElement.href = `http://localhost:3000/download/${data.videoId}`;
+                downloadLinkElement.download = `${data.videoId}.mp4`; // Nombre de archivo correcto
+                outputElement.style.display = "block";
+                errorElement.style.display = "none";
+            } catch (error) {
+                errorElement.textContent = "Error: " + error.message;
+                errorElement.style.display = "block";
+                outputElement.style.display = "none";
+            } finally {
+                loadingElement.style.display = "none";
+            }
+        });
+    </script>
+
+
+</body>
+
+</html>
